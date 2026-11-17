@@ -1,0 +1,11 @@
+{
+  "name": "gloop-golf",
+  "private": true,
+  "type": "module",
+  "description": "Jelly mini golf for the browser, iPad, and phone. Zero dependencies.",
+  "license": "MIT",
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node test/geometry.test.mjs && node test/predict.test.mjs && node test/holes.test.mjs && node test/cup.test.mjs && node test/balls.test.mjs && node test/trophies.test.mjs"
+  }
+}

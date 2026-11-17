@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#5cae3f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Gloop Golf">
+<meta name="description" content="Jelly mini golf for the whole family. Putt a squishy Gloop ball past windmills, bumpers, and water. Pass and play for up to 4 players. Built with Claude Code.">
+<title>Gloop Golf</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css?v=1">
+</head>
+<body>
+<canvas id="game" aria-label="Mini golf course. Drag back from the ball to aim, let go to putt."></canvas>
+
+<div id="ui">
+  <header id="hud" class="hud" hidden>
+    <div class="hud-left">
+      <div class="lv-pill"><b id="hudHole">Hole 1</b><span id="hudName">First Putt</span></div>
+      <div id="hudPar" class="par-tag">Par 2</div>
+    </div>
+    <div class="player-chip" role="status"><img id="hudAvatar" alt=""><div><b id="hudPlayer">Cherry</b><span id="hudStroke">Your putt</span><small id="hudTotal"></small></div></div>
+    <div class="hud-right">
+      <button class="icon-btn" data-act="restart" aria-label="Restart hole" title="Restart hole (R)">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M5.5 8.75A7.5 7.5 0 1 0 12 5M14.6 2.2 11.4 5l3.2 2.8" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <button class="icon-btn" data-act="card" aria-label="Scorecard" title="Scorecard">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2.5" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M4 10h16M10 4v16" stroke="currentColor" stroke-width="2.2"/></svg>
+      </button>
+      <button class="icon-btn" data-act="pause" aria-label="Pause" title="Pause (P)">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1.5" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1.5" fill="currentColor"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <div id="banner" class="banner" hidden><b></b><span></span></div>
+
+  <section id="menu" class="screen menu" hidden>
+    <h1 class="logo" aria-label="Gloop Golf"><span class="l1">GLOOP</span><span class="l2">GOLF</span></h1>
+    <p class="hint">Jelly mini golf for the whole family</p>
+    <div class="grow"></div>
+    <button class="btn primary big" data-act="play">Play</button>
+    <div id="menuBest" class="stars-pill"></div>
+    <nav class="menu-bar">
+      <button class="btn small" data-act="trophies">🏆 Trophies <span id="trophyCount" class="badge">0</span></button>
+      <button class="btn small" data-act="howto">How to play</button>
+      <button class="btn small icon" data-act="settings" aria-label="Settings" title="Settings">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M19.4 13a7.6 7.6 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.4 7.4 0 0 0-1.7-1L15 3h-4l-.3 2.9a7.4 7.4 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.6 7.6 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.4 7.4 0 0 0 1.7 1L11 21h4l.3-2.9a7.4 7.4 0 0 0 1.7-1l2.5 1 2-3.5zM13 15.5A3.5 3.5 0 1 1 13 8.5a3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg>
+      </button>
+      <button class="btn small icon" data-act="fullscreen" aria-label="Full screen" title="Full screen">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+      </button>
+    </nav>
+  </section>
+
+  <section id="setup" class="screen modal" hidden>
+    <div class="card wide setup-card">
+      <div class="card-head">
+        <h2>Who's playing?</h2>
+        <button class="icon-btn close" data-act="close" aria-label="Back">✕</button>
+      </div>
+      <p class="sub">Up to 4 players take turns on one screen. Tap a name to change it, and tap the style to change the ball.</p>
+      <div id="slots" class="slots"></div>
+      <div class="row"><button class="btn primary" data-act="courses">Pick a course</button></div>
+    </div>
+  </section>
+
+  <section id="courses" class="screen modal" hidden>
+    <div class="card wide courses-card">
+      <div class="card-head">
+        <h2>Pick a course</h2>
+        <button class="icon-btn close" data-act="close" aria-label="Back">✕</button>
+      </div>
+      <div id="courseList" class="course-list"></div>
+    </div>
+  </section>
+
+  <section id="card" class="screen modal" hidden>
+    <div class="card wide">
+      <h2 id="cardTitle">Scorecard</h2>
+      <div class="sc-wrap" id="cardTable"></div>
+      <div class="row">
+        <button class="btn primary" id="cardNext" data-act="next">Next hole</button>
+        <button class="btn" id="cardClose" data-act="resume">Close</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="final" class="screen modal" hidden>
+    <div class="card final-card">
+      <div id="finalTitle" class="res-title">Round complete!</div>
+      <div id="finalSub" class="res-mode">Garden Green</div>
+      <ol id="finalList" class="final-list"></ol>
+      <div id="finalBest" class="res-best"></div>
+      <div class="row">
+        <button class="btn primary" data-act="again">Play again</button>
+        <button class="btn" data-act="menu">Menu</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="trophies" class="screen modal" hidden>
+    <div class="card wide">
+      <div class="card-head">
+        <h2>Trophies <small id="trophyTotal"></small></h2>
+        <button class="icon-btn close" data-act="close" aria-label="Close">✕</button>
+      </div>
+      <div id="trophyGrid" class="tr-grid"></div>
+      <h3 class="styles-title">Ball styles</h3>
+      <p class="sub">Win trophies to unlock new looks. Pick a style for each player before a round.</p>
+      <div id="styleGrid" class="style-grid"></div>
+    </div>
+  </section>
+
+  <section id="pause" class="screen modal" hidden>
+    <div class="card narrow">
+      <h2>Paused</h2>
+      <div class="col">
+        <button class="btn primary" data-act="resume">Resume</button>
+        <button class="btn" data-act="restart">Restart this hole</button>
+        <button class="btn" data-act="card">Scorecard</button>
+        <button class="btn" data-act="settings">Settings</button>
+        <button class="btn" data-act="menu">Main menu</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="settings" class="screen modal" hidden>
+    <div class="card settings">
+      <div class="card-head">
+        <h2>Settings</h2>
+        <button class="icon-btn close" data-act="close" aria-label="Close">✕</button>
+      </div>
+      <label class="toggle"><input type="checkbox" id="setSound"><span>Sound effects</span></label>
+      <label class="toggle"><input type="checkbox" id="setMusic"><span>Music</span></label>
+      <label class="toggle"><input type="checkbox" id="setGuide"><span>Aim guide (dotted path)</span></label>
+      <label class="toggle"><input type="checkbox" id="setTurns"><span>Take turns: one putt each (2+ players)</span></label>
+      <section class="stats" aria-labelledby="statsTitle">
+        <h3 id="statsTitle">Your golf</h3>
+        <div class="kpis" id="statKpis"></div>
+      </section>
+      <button class="btn danger" id="resetBtn">Reset scores and trophies</button>
+    </div>
+  </section>
+
+  <section id="howto" class="screen modal" hidden>
+    <div class="card wide">
+      <div class="card-head">
+        <h2>How to play</h2>
+        <button class="icon-btn close" data-act="close" aria-label="Close">✕</button>
+      </div>
+      <div class="howto">
+        <div class="how-block">
+          <h3>Putt</h3>
+          <p>Touch anywhere and drag back, away from where you want the ball to go. Let go to putt.</p>
+          <p>A short pull is a soft putt. Pull farther for more power: near the end of the pull, the power grows faster. To stop, slide back to where you started and let go.</p>
+          <p>The dotted path shows where the ball will roll, including the bounces.</p>
+          <p>On a long pull, moving your finger sideways turns the aim only a little, so you can set far shots exactly. For a big turn, pull back less, turn, then pull again.</p>
+          <p>To start the hole again from the tee, tap the round arrow at the top.</p>
+        </div>
+        <div class="how-block">
+          <h3>The course</h3>
+          <p>Bounce off the wooden rails. Jelly bumpers kick the ball away. Sand slows it down, ice speeds it up, and hills pull it sideways.</p>
+          <p>Water costs one stroke, and the ball goes back to where you putted from. Time your putt through the windmill when the sails are up.</p>
+        </div>
+        <div class="how-block">
+          <h3>Special tiles</h3>
+          <p>Boost pads shoot the ball the way the arrows point. Conveyor belts carry it along. A portal sends the ball out of its twin, going the same way. Spinners and sliding walls bat it away, so time your putt.</p>
+        </div>
+        <div class="how-block">
+          <h3>Trophies</h3>
+          <p>Win trophies for great shots, like a hole in one or a bank shot. Many trophies come from how the ball moves: bounce off walls, bumpers or another player's ball, slide on ice, ride a belt, or knock a friend's ball in. Some trophies unlock new ball styles. Pick a style for each player before the round.</p>
+        </div>
+        <div class="how-block">
+          <h3>Score</h3>
+          <p>Each hole has a par: the number of putts a good player needs. Fewer strokes is better. A hole in one is the best!</p>
+          <p>After 8 strokes, the ball is picked up and you score 8.</p>
+        </div>
+        <div class="how-block">
+          <h3>Play together</h3>
+          <p>Up to 4 players take turns on one screen. Each player putts once, then the next player goes. All balls stay on the field where they stopped, and they hit each other. A ball knocked into the cup counts for its player with no extra stroke. A ball knocked into the water goes back with no penalty. When your ball drops, you are done with that hole. The scorecard shows who leads.</p>
+          <p>To play the old way, turn off "Take turns" in Settings. Then each player putts until the ball drops.</p>
+        </div>
+      </div>
+      <p class="credit">Made with <a href="https://claude.com/product/claude-code" target="_blank" rel="noopener">Claude Code</a></p>
+    </div>
+  </section>
+
+  <div id="rotate" class="rotate-hint" hidden>
+    <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect x="7" y="3" width="10" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M3 9a8 8 0 0 1 4-4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+    <span>Turn your device sideways for a bigger course.</span>
+  </div>
+
+  <div id="tapGate" class="tap-gate" hidden>
+    <button class="btn primary" id="tapGateBtn">Tap to play</button>
+    <p>Sound is on. You can change it in Settings.</p>
+  </div>
+
+  <button id="soundHint" class="sound-hint" hidden aria-label="Sound is paused. Tap to turn it back on.">
+    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M4 9h4l5-4v14l-5-4H4z"/><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" d="M16.5 9.5l5 5M21.5 9.5l-5 5"/></svg>
+    <span>Sound paused. Tap here.</span>
+  </button>
+</div>
+
+<script type="module" src="js/main.js?v=1"></script>
+</body>
+</html>
