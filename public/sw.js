@@ -1,5 +1,5 @@
 // Network first, cache as fallback: updates show at once, and the game still loads offline.
-const CACHE = 'gloop-golf-v15';
+const CACHE = 'gloop-golf-v16';
 const CORE = [
   './', 'index.html', 'css/style.css', 'manifest.webmanifest',
   'js/main.js', 'js/game.js', 'js/view.js', 'js/golf.js', 'js/course.js', 'js/audio.js', 'js/baked.js', 'js/physics.js', 'js/store.js', 'js/ui.js', 'js/util.js', 'js/gloop-art.js', 'js/spin.js', 'js/themes.js', 'js/scenery.js', 'js/ballart.js', 'js/trophies.js',

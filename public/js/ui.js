@@ -6,6 +6,7 @@ import { drawBall, STYLES } from './ballart.js';
 import { TROPHIES, trophyById, hasStyle, unlockedStyles } from './trophies.js';
 import { facingCamera, roll } from './spin.js';
 import { PLAYER_COLORS, resultName, MAX_STROKES, TILT } from './game.js';
+import { GLOOP_COLORS } from './gloop-art.js';
 
 const $ = (id) => document.getElementById(id);
 const DEFAULT_NAMES = { cherry: 'Cherry', lime: 'Lime', grape: 'Grape', berry: 'Berry' };
@@ -233,26 +234,67 @@ export class UI {
   }
 
   // ---------- Player setup ----------
+  // Each slot has its own ball color. Two playing players never share a color: a color
+  // another playing player has is dimmed, and a slot that joins with a taken color gets a
+  // free one.
   openSetup() {
-    const saved = this.store.data.players;
+    const saved = this.store.data.players.filter((p) => PLAYER_COLORS.includes(p.color));
     const box = $('slots');
     box.textContent = '';
-    PLAYER_COLORS.forEach((color, i) => {
-      const p = saved.find((x) => x.color === color);
+    const free = PLAYER_COLORS.filter((c) => !saved.some((p) => p.color === c));
+    const slots = [];
+    const takenBy = (slot, c) => slots.some((s) => s !== slot && s.classList.contains('on') && s.dataset.color === c);
+    const refreshDots = () => {
+      for (const s of slots) {
+        for (const d of s.querySelectorAll('.dot')) {
+          d.classList.toggle('pick', d.dataset.c === s.dataset.color);
+          d.disabled = takenBy(s, d.dataset.c);
+        }
+      }
+    };
+    PLAYER_COLORS.forEach((_, i) => {
+      const p = saved[i];
       const on = i === 0 || !!p;
+      let color = p ? p.color : free.shift();
       const slot = document.createElement('div');
+      slots.push(slot);
       slot.className = 'slot' + (on ? ' on' : '');
       slot.dataset.color = color;
       const styles = unlockedStyles(this.store);
       let style = p && hasStyle(this.store, p.style) ? p.style : 'jelly';
       slot.dataset.style = style;
-      slot.innerHTML = `<img src="${ballIcon(color, 64, 'sour', style)}" alt=""><button class="slot-style" type="button" aria-label="Ball style"></button><input type="text" maxlength="12" value="${(p && p.name) || DEFAULT_NAMES[color]}" aria-label="Player ${i + 1} name"><button class="slot-tog" type="button">${on ? (i === 0 ? 'Player 1' : 'Playing') : 'Add'}</button>`;
+      const dots = PLAYER_COLORS.map((c) => `<button class="dot" type="button" data-c="${c}" style="--c:${GLOOP_COLORS[c][1]}" aria-label="${DEFAULT_NAMES[c]} color"></button>`).join('');
+      slot.innerHTML = `<button class="slot-ball" type="button" aria-label="Change ball color"><img src="${ballIcon(color, 64, 'sour', style)}" alt=""></button><div class="slot-dots">${dots}</div><button class="slot-style" type="button" aria-label="Ball style"></button><input type="text" maxlength="12" value="${(p && p.name) || DEFAULT_NAMES[color]}" aria-label="Player ${i + 1} name"><button class="slot-tog" type="button">${on ? (i === 0 ? 'Player 1' : 'Playing') : 'Add'}</button>`;
       const sb = slot.querySelector('.slot-style');
+      const input = slot.querySelector('input');
       const showStyle = () => {
         sb.textContent = `${STYLES.find((x) => x.id === style).name}${styles.length > 1 ? ' ▸' : ''}`;
         slot.querySelector('img').src = ballIcon(color, 64, 'sour', style);
         slot.dataset.style = style;
       };
+      // A default name follows the color (Cherry becomes Lime); a name the player typed stays.
+      // A slot that is not playing and has the chosen color takes the color given up, so all
+      // four slots always show different colors.
+      const setColor = (c, quiet = false) => {
+        if (c === color || takenBy(slot, c)) return;
+        const old = color;
+        if (input.value.trim() === DEFAULT_NAMES[color]) input.value = DEFAULT_NAMES[c];
+        color = c;
+        slot.dataset.color = c;
+        showStyle();
+        for (const s of slots) if (s !== slot && s.dataset.color === c) s.setColor(old, true);
+        refreshDots();
+        if (!quiet) this.game.sfx.ui();
+      };
+      slot.setColor = setColor;
+      for (const d of slot.querySelectorAll('.dot')) d.addEventListener('click', () => setColor(d.dataset.c));
+      slot.querySelector('.slot-ball').addEventListener('click', () => {
+        const at = PLAYER_COLORS.indexOf(color);
+        for (let k = 1; k < PLAYER_COLORS.length; k++) {
+          const c = PLAYER_COLORS[(at + k) % PLAYER_COLORS.length];
+          if (!takenBy(slot, c)) return setColor(c);
+        }
+      });
       showStyle();
       sb.disabled = styles.length < 2;
       sb.addEventListener('click', () => {
@@ -265,11 +307,15 @@ export class UI {
       if (i === 0) tog.disabled = true;
       tog.addEventListener('click', () => {
         slot.classList.toggle('on');
-        tog.textContent = slot.classList.contains('on') ? 'Playing' : 'Add';
+        const nowOn = slot.classList.contains('on');
+        tog.textContent = nowOn ? 'Playing' : 'Add';
+        if (nowOn && takenBy(slot, slot.dataset.color)) slot.setColor(PLAYER_COLORS.find((c) => !takenBy(slot, c)));
+        refreshDots();
         this.game.sfx.ui();
       });
       box.appendChild(slot);
     });
+    refreshDots();
     this.el.menu.hidden = true;
     this.open('setup');
   }

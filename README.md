@@ -40,7 +40,7 @@ The human part was direction and taste: the game idea, the feedback on looks and
 | ![Ball hits](docs/screenshots/hits.jpg) | ![Sunny Beach](docs/screenshots/beach.jpg) |
 | **Candy Factory: portals** | **Frosty Peak: ice and boost pads** |
 | ![Candy Factory](docs/screenshots/candy.jpg) | ![Frosty Peak](docs/screenshots/frost.jpg) |
-| **Up to 4 players, each with a ball style** | **Pick a course** |
+| **Up to 4 players: pick a color and a style** | **Pick a course** |
 | ![Players](docs/screenshots/setup.jpg) | ![Courses](docs/screenshots/courses.jpg) |
 | **Scorecard** | **Trophies** |
 | ![Scorecard](docs/screenshots/scorecard.jpg) | ![Trophies](docs/screenshots/trophies.jpg) |
@@ -95,7 +95,7 @@ Turn off "Take turns" in Settings to play the classic way: each player putts unt
 - **Balls that hit each other**: Carom! (bounce off another player's ball and sink), Helping Hand, Double Drop, Strike!, Chain Reaction, Dunk Tank
 - **Courses**: one for each course, World Tour, Clean Card, Under Par
 
-Seven trophies unlock **ball styles**: Polka Dots, Stars, Hearts, Flowers, Stripes, Sprinkles, and Snowflakes. Pick a style for each player before the round. Trophies, best scores, and settings are saved in the browser (`localStorage`).
+Seven trophies unlock **ball styles**: Polka Dots, Stars, Hearts, Flowers, Stripes, Sprinkles, and Snowflakes. Pick a color and a style for each player before the round. Trophies, best scores, and settings are saved in the browser (`localStorage`).
 
 ## Controls
 
